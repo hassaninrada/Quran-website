@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al Quran - Premium Learning Experience</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCSuKTOuNxzOhD64QjGutuoUtvFvTJSBM4",
+            authDomain: "quran-website-992eb.firebaseapp.com",
+            projectId: "quran-website-992eb",
+            storageBucket: "quran-website-992eb.firebasestorage.app",
+            messagingSenderId: "324640207099",
+            appId: "1:324640207099:web:6c2931abee734b9847005e",
+            measurementId: "G-74JM1QKDRK"
+        };
+
+        // Initialize Firebase (Compat)
+        firebase.initializeApp(firebaseConfig);
+    </script>
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Modern Urdu Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loader-content">
+            <h1 class="urdu-title fade-in">القرآن</h1>
+            <p class="loading-text">Loading Spiritual Journey...</p>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Strict Mode Lockout Modal -->
+    <div id="strictModal" class="modal-overlay hidden">
+        <div class="glass-card modal-card">
+            <i data-lucide="lock" class="lock-icon"></i>
+            <h2>Daily Unlock Required</h2>
+            <p><strong>Surah Al-Fatiha</strong> must be recited correctly to unlock your apps today.</p>
+            <div id="unlockStatus" class="status-message"></div>
+            <button id="startUnlockBtn" class="primary-btn pulse-anim">Start Recitation Check</button>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- Navigation -->
+        <nav class="navbar glass">
+            <!-- ... -->
+            <button id="mobileMenuBtn" class="icon-btn mobile-only" title="Surah List">
+                <i data-lucide="menu"></i>
+            </button>
+            <div class="logo">
+                <i data-lucide="book-open"></i>
+                <span>AL Quran</span>
+            </div>
+            <div class="nav-links">
+                <button class="nav-btn active" data-page="home">Home</button>
+                <button class="nav-btn" data-page="read-quran">Read Quran</button>
+                <button class="nav-btn" data-page="tracker">Tracker</button>
+                <!-- Import moved to Tracker page internally -->
+            </div>
+            <div class="nav-actions">
+                <div class="search-bar">
+                    <i data-lucide="search"></i>
+                    <input type="text" id="globalSearch" placeholder="Search Surah or Ayah...">
+                </div>
+                <button id="themeToggle" class="icon-btn">
+                    <i data-lucide="moon"></i>
+                </button>
+                <button id="authBtn" class="primary-btn">Sign In</button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main id="mainContent">
+            <!-- Hero Section (Home) -->
+            <section id="homePage" class="page active">
+                <div class="hero-section">
+                    <div class="hero-content fade-in-up">
+                        <h1>Experience the Quran <br><span class="gradient-text">Like Never Before</span></h1>
+                        <p>Read, Listen, and Learn with AI-assisted Tajweed checking and daily progress tracking.</p>
+                        <div class="hero-actions">
+                            <button class="primary-btn" onclick="handleGetStarted()">Get Started</button>
+                            <button class="secondary-btn secondary-hero-btn" onclick="navigateTo('tracker')">View
+                                Progress</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features Grid -->
+                <div class="features-grid">
+                    <div class="glass-card fade-in-up delay-1">
+                        <i data-lucide="book-open-check"></i>
+                        <h3>Crystal Clear Text</h3>
+                        <p>Beautiful Uthmani script with Urdu translations for deep understanding.</p>
+                    </div>
+                    <div class="glass-card fade-in-up delay-2">
+                        <i data-lucide="mic"></i>
+                        <h3>AI Recitation Check</h3>
+                        <p>Read aloud and let our AI helper check your pronunciation accuracy.</p>
+                    </div>
+                    <div class="glass-card fade-in-up delay-3">
+                        <i data-lucide="target"></i>
+                        <h3>Daily Goals</h3>
+                        <p>Track your daily reading streaks and build a lasting habit.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quran Reading Interface -->
+            <section id="readPage" class="page">
+                <div class="quran-layout">
+                    <!-- Surah List Sidebar -->
+                    <aside class="surah-sidebar glass">
+                        <div class="sidebar-header">
+                            <h3>Surahs</h3>
+                            <input type="text" id="surahSearch" placeholder="Filter...">
+                        </div>
+                        <ul id="surahList" class="surah-list">
+                            <!-- Populated by JS -->
+                            <li class="loading-item">Loading Surahs...</li>
+                        </ul>
+                    </aside>
+
+                    <!-- Reading View -->
+                    <div class="reading-view">
+                        <div class="reading-header glass">
+                            <h2 id="currentSurahName">Al-Fatiha</h2>
+                            <div class="reading-controls">
+                                <button class="icon-btn" title="Settings"><i data-lucide="settings"></i></button>
+                                <button class="icon-btn" title="Info"><i data-lucide="info"></i></button>
+                            </div>
+                        </div>
+                        <div id="quranContainer" class="quran-container">
+                            <!-- Ayahs populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tracker & Import Interface -->
+            <section id="trackerPage" class="page">
+                <div class="tracker-container">
+                    <div class="glass-card progress-card">
+                        <h2>Your Progress</h2>
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <span class="stat-value" id="streakValue">0</span>
+                                <span class="stat-label">Day Streak</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="ayahsReadValue">0</span>
+                                <span class="stat-label">Ayahs Read</span>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </section>
+
+            <!-- Auth Interface (Signup/Login) -->
+            <section id="authPage" class="page">
+                <div class="auth-container">
+                    <div class="glass-card auth-card fade-in-up">
+                        <h2 id="authTitle">Create Account</h2>
+                        <p id="authSubtitle">Join us to track your Quran journey</p>
+
+                        <form id="authForm" class="auth-form">
+                            <div class="input-group">
+                                <div class="input-wrapper">
+                                    <i data-lucide="mail"></i>
+                                    <input type="email" id="email" placeholder="Email Address" required>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <div class="input-wrapper">
+                                    <i data-lucide="lock"></i>
+                                    <input type="password" id="password" placeholder="Password" required>
+                                </div>
+                            </div>
+                            <div class="input-group" id="confirmPasswordGroup">
+                                <div class="input-wrapper">
+                                    <i data-lucide="shield-check"></i>
+                                    <input type="password" id="confirmPassword" placeholder="Confirm Password">
+                                </div>
+                            </div>
+                            <button type="submit" id="submitAuth" class="primary-btn auth-submit">
+                                <span>Get Started</span>
+                                <i data-lucide="arrow-right"></i>
+                            </button>
+                        </form>
+
+
+                        <div class="auth-divider"><span>OR</span></div>
+
+                        <button id="googleBtn" class="google-btn">
+                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                            <span>Continue with Google</span>
+                        </button>
+
+                        <p class="auth-footer">
+                            <span id="authFooterText">Already have an account?</span> <a href="#"
+                                id="toggleAuthMode">Login</a>
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="script.js?v=3"></script>
+</body>
+
+</html>
